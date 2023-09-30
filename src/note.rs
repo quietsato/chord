@@ -1,32 +1,5 @@
 use std::fmt::{Debug, Display};
 
-macro_rules! impl_display_for_note_ext {
-    ($t:ty) => {
-        impl Display for $t {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{}", self.name())
-            }
-        }
-    };
-    ($t:ty, $($t2:ty),+) => {
-        impl_display_for_note_ext!($t);
-        impl_display_for_note_ext!($($t2),+);
-    };
-}
-
-pub trait NoteExt: Debug + Display {
-    fn name(&self) -> String;
-    fn id(&self) -> usize;
-    fn next(&self) -> Box<dyn NoteExt>;
-    fn prev(&self) -> Box<dyn NoteExt>;
-}
-impl<R: NoteExt> PartialEq<R> for dyn NoteExt {
-    fn eq(&self, other: &R) -> bool {
-        self.id() == other.id()
-    }
-}
-impl_display_for_note_ext!(Note, Sharp, Flat);
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Note {
     C,
@@ -36,22 +9,31 @@ pub enum Note {
     G,
     A,
     B,
+    Sharp(Box<Note>),
+    Flat(Box<Note>),
 }
 
-impl NoteExt for Note {
-    fn name(&self) -> String {
-        match self {
-            Self::C => "C",
-            Self::D => "D",
-            Self::E => "E",
-            Self::F => "F",
-            Self::G => "G",
-            Self::A => "A",
-            Self::B => "B",
-        }
-        .into()
+impl Display for Note {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name())
     }
-    fn id(&self) -> usize {
+}
+
+impl Note {
+    pub fn name(&self) -> String {
+        match self {
+            Self::C => "C".into(),
+            Self::D => "D".into(),
+            Self::E => "E".into(),
+            Self::F => "F".into(),
+            Self::G => "G".into(),
+            Self::A => "A".into(),
+            Self::B => "B".into(),
+            Self::Sharp(n) => format!("{}♯ ", n.name()),
+            Self::Flat(n) => format!("{}♭ ", n.name()),
+        }
+    }
+    pub fn id(&self) -> usize {
         match self {
             Self::C => 0,
             Self::D => 2,
@@ -60,64 +42,40 @@ impl NoteExt for Note {
             Self::G => 7,
             Self::A => 9,
             Self::B => 11,
+            Self::Sharp(n) => (n.id() + 1) % 12,
+            Self::Flat(n) => (n.id() + 11) % 12,
         }
     }
-    fn next(&self) -> Box<dyn NoteExt> {
-        Box::new(Sharp(self.clone()))
-    }
-    fn prev(&self) -> Box<dyn NoteExt> {
-        Box::new(Flat(self.clone()))
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Sharp(Note);
-
-impl NoteExt for Sharp {
-    fn name(&self) -> String {
-        format!("{}♯ ", self.0.name())
-    }
-    fn id(&self) -> usize {
-        (self.0.id() + 1) % 12
-    }
-    fn next(&self) -> Box<dyn NoteExt> {
+    pub fn s(&self) -> Self {
         match self {
-            Sharp(Note::C) => Box::new(Note::D),
-            Sharp(Note::D) => Box::new(Note::E),
-            Sharp(Note::E) => Box::new(Sharp(Note::F)),
-            Sharp(Note::F) => Box::new(Note::G),
-            Sharp(Note::G) => Box::new(Note::A),
-            Sharp(Note::A) => Box::new(Note::B),
-            Sharp(Note::B) => Box::new(Sharp(Note::C)),
+            Self::Sharp(n) => match &**n {
+                Self::C => Self::D,
+                Self::D => Self::E,
+                Self::E => Self::Sharp(Self::F.into()),
+                Self::F => Self::G,
+                Self::G => Self::A,
+                Self::A => Self::B,
+                Self::B => Self::Sharp(Self::C.into()),
+                n => n.s().s(),
+            },
+            Self::Flat(n) => *n.clone(),
+            n => Self::Sharp(Box::new(n.clone())),
         }
     }
-    fn prev(&self) -> Box<dyn NoteExt> {
-        Box::new(self.0.clone())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Flat(Note);
-
-impl NoteExt for Flat {
-    fn name(&self) -> String {
-        format!("{}♭ ", self.0.name())
-    }
-    fn id(&self) -> usize {
-        (12 + self.0.id() - 1) % 12
-    }
-    fn next(&self) -> Box<dyn NoteExt> {
-        Box::new(self.0.clone())
-    }
-    fn prev(&self) -> Box<dyn NoteExt> {
+    pub fn f(&self) -> Note {
         match self {
-            Flat(Note::C) => Box::new(Flat(Note::B)),
-            Flat(Note::D) => Box::new(Note::C),
-            Flat(Note::E) => Box::new(Note::D),
-            Flat(Note::F) => Box::new(Flat(Note::E)),
-            Flat(Note::G) => Box::new(Note::F),
-            Flat(Note::A) => Box::new(Note::G),
-            Flat(Note::B) => Box::new(Note::A),
+            Self::Flat(n) => match &**n {
+                Self::C => Self::Flat(Self::B.into()),
+                Self::D => Self::C,
+                Self::E => Self::D,
+                Self::F => Self::Flat(Self::E.into()),
+                Self::G => Self::F,
+                Self::A => Self::G,
+                Self::B => Self::A,
+                nn => nn.f().f(),
+            },
+            Self::Sharp(n) => *n.clone(),
+            n => Self::Flat(Box::new(n.clone())),
         }
     }
 }
@@ -128,37 +86,37 @@ mod test {
     use test_case::test_case;
     #[test_case(Note::C, Note::D)]
     #[test_case(Note::D, Note::E)]
-    #[test_case(Note::E, Sharp(Note::F))]
+    #[test_case(Note::E, Note::Sharp(Box::new(Note::F)))]
     #[test_case(Note::F, Note::G)]
     #[test_case(Note::G, Note::A)]
     #[test_case(Note::A, Note::B)]
-    #[test_case(Note::B, Sharp(Note::C))]
-    fn test_sharp_sharp(note: impl NoteExt, expected: impl NoteExt) {
-        println!(
-            "{:?} -> {:?} -> {:?}",
-            note,
-            note.next(),
-            note.next().next()
-        );
-        println!("{} -> {} -> {}", note, note.next(), note.next().next());
-        assert_eq!(&*note.next().next(), &expected)
+    #[test_case(Note::B, Note::Sharp(Box::new(Note::C)))]
+    fn test_sharp_sharp(note: Note, expected: Note) {
+        println!("{:?} -> {:?} -> {:?}", note, note.s(), note.s().s());
+        println!("{} -> {} -> {}", note, note.s(), note.s().s());
+        assert_eq!(note.s().s(), expected)
     }
 
-    #[test_case(Note::C, Flat(Note::B))]
+    #[test_case(Note::C, Note::Flat(Box::new(Note::B)))]
     #[test_case(Note::D, Note::C)]
     #[test_case(Note::E, Note::D)]
-    #[test_case(Note::F, Flat(Note::E))]
+    #[test_case(Note::F, Note::Flat(Box::new(Note::E)))]
     #[test_case(Note::G, Note::F)]
     #[test_case(Note::A, Note::G)]
     #[test_case(Note::B, Note::A)]
-    fn test_flat_flat(note: impl NoteExt, expected: impl NoteExt) {
-        println!(
-            "{:?} -> {:?} -> {:?}",
-            note,
-            note.prev(),
-            note.prev().prev()
-        );
-        println!("{} -> {} -> {}", note, note.prev(), note.prev().prev());
-        assert_eq!(&*note.prev().prev(), &expected)
+    fn test_flat_flat(note: Note, expected: Note) {
+        println!("{:?} -> {:?} -> {:?}", note, note.f(), note.f().f());
+        println!("{} -> {} -> {}", note, note.f(), note.f().f());
+        assert_eq!(note.f().f(), expected)
+    }
+
+    #[test]
+    fn resolve_sharps_and_flats() {
+        assert_eq!(
+            Note::Sharp(Note::Flat(Note::Sharp(Note::Sharp(Note::C.into()).into()).into()).into())
+                .s()
+                .name(),
+            "D♯ "
+        )
     }
 }
