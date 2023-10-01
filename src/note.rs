@@ -1,82 +1,174 @@
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Note {
-    C,
-    D,
-    E,
-    F,
-    G,
-    A,
-    B,
-    Sharp(Box<Note>),
-    Flat(Box<Note>),
+trait Note: Debug + Default {
+    type T: Note;
+    type S: Note;
+    type F: Note;
+    fn name(&self) -> String;
+    fn id(&self) -> usize;
+    fn new() -> Self::T {
+        Self::T::default()
+    }
+    fn s(&self) -> Self::S {
+        Self::S::default()
+    }
+    fn f(&self) -> Self::F {
+        Self::F::default()
+    }
 }
 
-impl Display for Note {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name())
+#[derive(Debug, Default)]
+struct C;
+#[derive(Debug, Default)]
+struct D;
+#[derive(Debug, Default)]
+struct E;
+#[derive(Debug, Default)]
+struct F;
+#[derive(Debug, Default)]
+struct G;
+#[derive(Debug, Default)]
+struct A;
+#[derive(Debug, Default)]
+struct B;
+#[derive(Debug, Default)]
+struct Sharp<N: Note>(Box<N>);
+#[derive(Debug, Default)]
+struct Flat<N: Note>(Box<N>);
+
+macro_rules! impl_note {
+    ($t:ty, $id:expr) => {
+        impl Note for $t {
+            type T = $t;
+            type S = Sharp<$t>;
+            type F = Flat<$t>;
+            fn name(&self) -> String {
+                stringify!($t).into()
+            }
+            fn id(&self) -> usize {
+                $id
+            }
+        }
+    };
+}
+
+impl_note!(C, 0);
+impl_note!(D, 2);
+impl_note!(E, 4);
+impl_note!(F, 5);
+impl_note!(G, 7);
+impl_note!(A, 9);
+impl_note!(B, 11);
+
+macro_rules! impl_note_for_sharp {
+    (sharp(sharp($t:ty)) = $s:ty) => {
+        impl Note for Sharp<$t> {
+            type T = Sharp<$t>;
+            type S = $s;
+            type F = $t;
+            fn name(&self) -> String {
+                format!("{}♯ ", self.0.name())
+            }
+            fn id(&self) -> usize {
+                (self.0.id() + 1) % 12
+            }
+        }
+    };
+}
+
+impl_note_for_sharp!(sharp(sharp(C)) = D);
+impl_note_for_sharp!(sharp(sharp(D)) = E);
+impl_note_for_sharp!(sharp(sharp(E)) = Sharp<F>);
+impl_note_for_sharp!(sharp(sharp(F)) = G);
+impl_note_for_sharp!(sharp(sharp(G)) = A);
+impl_note_for_sharp!(sharp(sharp(A)) = B);
+impl_note_for_sharp!(sharp(sharp(B))= Sharp<C>);
+
+impl<N> Note for Sharp<Sharp<N>>
+where
+    N: Note,
+    Sharp<N>: Note,
+{
+    type T = <<Sharp<N> as Note>::S as Note>::T;
+    type S = <<Self::T as Note>::S as Note>::T;
+    type F = N::T;
+    fn name(&self) -> String {
+        self.0.s().name()
+    }
+    fn id(&self) -> usize {
+        self.0.s().id()
     }
 }
 
-impl Note {
-    pub fn name(&self) -> String {
-        match self {
-            Self::C => "C".into(),
-            Self::D => "D".into(),
-            Self::E => "E".into(),
-            Self::F => "F".into(),
-            Self::G => "G".into(),
-            Self::A => "A".into(),
-            Self::B => "B".into(),
-            Self::Sharp(n) => format!("{}♯ ", n.name()),
-            Self::Flat(n) => format!("{}♭ ", n.name()),
-        }
+impl<N> Note for Sharp<Flat<N>>
+where
+    N: Note,
+    Flat<N>: Note,
+{
+    type T = N::T;
+    type S = <N::S as Note>::T;
+    type F = <N::F as Note>::T;
+    fn name(&self) -> String {
+        self.0.name()
     }
-    pub fn id(&self) -> usize {
-        match self {
-            Self::C => 0,
-            Self::D => 2,
-            Self::E => 4,
-            Self::F => 5,
-            Self::G => 7,
-            Self::A => 9,
-            Self::B => 11,
-            Self::Sharp(n) => (n.id() + 1) % 12,
-            Self::Flat(n) => (n.id() + 11) % 12,
-        }
+    fn id(&self) -> usize {
+        self.0.id()
     }
-    pub fn s(&self) -> Self {
-        match self {
-            Self::Sharp(n) => match &**n {
-                Self::C => Self::D,
-                Self::D => Self::E,
-                Self::E => Self::Sharp(Self::F.into()),
-                Self::F => Self::G,
-                Self::G => Self::A,
-                Self::A => Self::B,
-                Self::B => Self::Sharp(Self::C.into()),
-                n => n.s().s(),
-            },
-            Self::Flat(n) => *n.clone(),
-            n => Self::Sharp(Box::new(n.clone())),
+}
+
+macro_rules! impl_note_for_flat {
+    ($t:ty, $f:ty) => {
+        impl Note for $t {
+            type T = $t;
+            type S = $t;
+            type F = $f;
+            fn name(&self) -> String {
+                format!("{}♭ ", self.0.name())
+            }
+            fn id(&self) -> usize {
+                (self.0.id() + 11) % 12
+            }
         }
+    };
+}
+
+impl_note_for_flat!(Flat<C>, Flat<B>);
+impl_note_for_flat!(Flat<D>, C);
+impl_note_for_flat!(Flat<E>, D);
+impl_note_for_flat!(Flat<F>, Flat<E>);
+impl_note_for_flat!(Flat<G>, F);
+impl_note_for_flat!(Flat<A>, G);
+impl_note_for_flat!(Flat<B>, A);
+
+impl<N> Note for Flat<Flat<N>>
+where
+    N: Note,
+    Flat<N>: Note,
+{
+    type T = <<Flat<N> as Note>::F as Note>::T;
+    type S = N::T;
+    type F = <<Self::T as Note>::F as Note>::T;
+    fn name(&self) -> String {
+        self.0.f().name()
     }
-    pub fn f(&self) -> Note {
-        match self {
-            Self::Flat(n) => match &**n {
-                Self::C => Self::Flat(Self::B.into()),
-                Self::D => Self::C,
-                Self::E => Self::D,
-                Self::F => Self::Flat(Self::E.into()),
-                Self::G => Self::F,
-                Self::A => Self::G,
-                Self::B => Self::A,
-                nn => nn.f().f(),
-            },
-            Self::Sharp(n) => *n.clone(),
-            n => Self::Flat(Box::new(n.clone())),
-        }
+    fn id(&self) -> usize {
+        self.0.f().id()
+    }
+}
+
+impl<N> Note for Flat<Sharp<N>>
+where
+    N: Note,
+    Sharp<N>: Note,
+{
+    type T = N::T;
+    type S = <N::S as Note>::T;
+    type F = <N::F as Note>::T;
+    fn name(&self) -> String {
+        self.0.name()
+    }
+    fn id(&self) -> usize {
+        self.0.id()
     }
 }
 
@@ -84,39 +176,17 @@ impl Note {
 mod test {
     use super::*;
     use test_case::test_case;
-    #[test_case(Note::C, Note::D)]
-    #[test_case(Note::D, Note::E)]
-    #[test_case(Note::E, Note::Sharp(Box::new(Note::F)))]
-    #[test_case(Note::F, Note::G)]
-    #[test_case(Note::G, Note::A)]
-    #[test_case(Note::A, Note::B)]
-    #[test_case(Note::B, Note::Sharp(Box::new(Note::C)))]
-    fn test_sharp_sharp(note: Note, expected: Note) {
-        println!("{:?} -> {:?} -> {:?}", note, note.s(), note.s().s());
-        println!("{} -> {} -> {}", note, note.s(), note.s().s());
-        assert_eq!(note.s().s(), expected)
+
+    #[test_case(C, "C")]
+    #[test_case(<Sharp<Sharp<D>>>::new(), "E")]
+    #[test_case(<Flat<Flat<G>>>::new(), "F")]
+    #[test_case(<Flat<Flat<Flat<G>>>>::new(), "F♭ ")]
+    fn test_note_name(note: impl Note, expected: &str) {
+        assert_eq!(&note.name(), expected);
     }
 
-    #[test_case(Note::C, Note::Flat(Box::new(Note::B)))]
-    #[test_case(Note::D, Note::C)]
-    #[test_case(Note::E, Note::D)]
-    #[test_case(Note::F, Note::Flat(Box::new(Note::E)))]
-    #[test_case(Note::G, Note::F)]
-    #[test_case(Note::A, Note::G)]
-    #[test_case(Note::B, Note::A)]
-    fn test_flat_flat(note: Note, expected: Note) {
-        println!("{:?} -> {:?} -> {:?}", note, note.f(), note.f().f());
-        println!("{} -> {} -> {}", note, note.f(), note.f().f());
-        assert_eq!(note.f().f(), expected)
-    }
-
-    #[test]
-    fn resolve_sharps_and_flats() {
-        assert_eq!(
-            Note::Sharp(Note::Flat(Note::Sharp(Note::Sharp(Note::C.into()).into()).into()).into())
-                .s()
-                .name(),
-            "D♯ "
-        )
+    #[test_case(E, Flat::<F>::new())]
+    fn test_note_id(n1: impl Note, n2: impl Note) {
+        assert_eq!(n1.id(), n2.id());
     }
 }
