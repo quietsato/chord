@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-trait Note: Debug + Default {
+pub trait Note: Debug + Default {
     type T: Note;
     type S: Note;
     type F: Note;
@@ -18,23 +18,23 @@ trait Note: Debug + Default {
 }
 
 #[derive(Debug, Default)]
-struct C;
+pub struct C;
 #[derive(Debug, Default)]
-struct D;
+pub struct D;
 #[derive(Debug, Default)]
-struct E;
+pub struct E;
 #[derive(Debug, Default)]
-struct F;
+pub struct F;
 #[derive(Debug, Default)]
-struct G;
+pub struct G;
 #[derive(Debug, Default)]
-struct A;
+pub struct A;
 #[derive(Debug, Default)]
-struct B;
+pub struct B;
 #[derive(Debug, Default)]
-struct Sharp<N: Note>(Box<N>);
+pub struct Sharp<N: Note>(Box<N>);
 #[derive(Debug, Default)]
-struct Flat<N: Note>(Box<N>);
+pub struct Flat<N: Note>(Box<N>);
 
 macro_rules! impl_note {
     ($t:ty, $id:expr) => {
