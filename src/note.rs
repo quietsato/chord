@@ -4,6 +4,8 @@ pub trait Note: Debug + Default {
     type T: Note;
     type S: Note;
     type F: Note;
+    type N: Note;
+    type SS: Note;
     fn name(&self) -> String;
     fn id(&self) -> usize;
     fn new() -> Self::T {
@@ -37,11 +39,13 @@ pub struct Sharp<N: Note>(Box<N>);
 pub struct Flat<N: Note>(Box<N>);
 
 macro_rules! impl_note {
-    ($t:ty, $id:expr) => {
+    ($t:ty, $id:expr, $n:ty) => {
         impl Note for $t {
             type T = $t;
             type S = Sharp<$t>;
             type F = Flat<$t>;
+            type N = $n;
+            type SS = <Sharp<$n> as Note>::T;
             fn name(&self) -> String {
                 stringify!($t).into()
             }
@@ -52,13 +56,13 @@ macro_rules! impl_note {
     };
 }
 
-impl_note!(C, 0);
-impl_note!(D, 2);
-impl_note!(E, 4);
-impl_note!(F, 5);
-impl_note!(G, 7);
-impl_note!(A, 9);
-impl_note!(B, 11);
+impl_note!(C, 0, Flat<D>);
+impl_note!(D, 2, Flat<E>);
+impl_note!(E, 4, F);
+impl_note!(F, 5, Flat<G>);
+impl_note!(G, 7, Flat<A>);
+impl_note!(A, 9, Flat<B>);
+impl_note!(B, 11, C);
 
 macro_rules! impl_note_for_sharp {
     (sharp(sharp($t:ty)) = $s:ty) => {
@@ -66,6 +70,8 @@ macro_rules! impl_note_for_sharp {
             type T = Sharp<$t>;
             type S = $s;
             type F = $t;
+            type N = $s;
+            type SS = Sharp<$s>;
             fn name(&self) -> String {
                 format!("{}♯ ", self.0.name())
             }
@@ -82,7 +88,7 @@ impl_note_for_sharp!(sharp(sharp(E)) = Sharp<F>);
 impl_note_for_sharp!(sharp(sharp(F)) = G);
 impl_note_for_sharp!(sharp(sharp(G)) = A);
 impl_note_for_sharp!(sharp(sharp(A)) = B);
-impl_note_for_sharp!(sharp(sharp(B))= Sharp<C>);
+impl_note_for_sharp!(sharp(sharp(B)) = Sharp<C>);
 
 impl<N> Note for Sharp<Sharp<N>>
 where
@@ -92,6 +98,8 @@ where
     type T = <<Sharp<N> as Note>::S as Note>::T;
     type S = <<Self::T as Note>::S as Note>::T;
     type F = N::T;
+    type N = <N::N as Note>::T;
+    type SS = <N::SS as Note>::T;
     fn name(&self) -> String {
         self.0.s().name()
     }
@@ -108,6 +116,8 @@ where
     type T = N::T;
     type S = <N::S as Note>::T;
     type F = <N::F as Note>::T;
+    type N = <N::N as Note>::T;
+    type SS = <N::SS as Note>::T;
     fn name(&self) -> String {
         self.0.name()
     }
@@ -118,10 +128,12 @@ where
 
 macro_rules! impl_note_for_flat {
     ($t:ty, $f:ty) => {
-        impl Note for $t {
-            type T = $t;
+        impl Note for Flat<$t> {
+            type T = Flat<$t>;
             type S = $t;
             type F = $f;
+            type N = $t;
+            type SS = <$t as Note>::N;
             fn name(&self) -> String {
                 format!("{}♭ ", self.0.name())
             }
@@ -132,22 +144,25 @@ macro_rules! impl_note_for_flat {
     };
 }
 
-impl_note_for_flat!(Flat<C>, Flat<B>);
-impl_note_for_flat!(Flat<D>, C);
-impl_note_for_flat!(Flat<E>, D);
-impl_note_for_flat!(Flat<F>, Flat<E>);
-impl_note_for_flat!(Flat<G>, F);
-impl_note_for_flat!(Flat<A>, G);
-impl_note_for_flat!(Flat<B>, A);
+impl_note_for_flat!(C, Flat<B>);
+impl_note_for_flat!(D, C);
+impl_note_for_flat!(E, D);
+impl_note_for_flat!(F, Flat<E>);
+impl_note_for_flat!(G, F);
+impl_note_for_flat!(A, G);
+impl_note_for_flat!(B, A);
 
 impl<N> Note for Flat<Flat<N>>
 where
     N: Note,
     Flat<N>: Note,
+    Flat<N::N>: Note,
 {
     type T = <<Flat<N> as Note>::F as Note>::T;
     type S = N::T;
     type F = <<Self::T as Note>::F as Note>::T;
+    type N = N::N;
+    type SS = Flat<N::N>;
     fn name(&self) -> String {
         self.0.f().name()
     }
@@ -164,6 +179,8 @@ where
     type T = N::T;
     type S = <N::S as Note>::T;
     type F = <N::F as Note>::T;
+    type N = <N::N as Note>::T;
+    type SS = <N::SS as Note>::T;
     fn name(&self) -> String {
         self.0.name()
     }
