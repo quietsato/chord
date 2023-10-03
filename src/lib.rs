@@ -1,3 +1,4 @@
+mod chord;
 mod key;
 mod note;
 
