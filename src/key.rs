@@ -3,7 +3,7 @@ use std::fmt::Debug;
 
 pub trait Interval {}
 pub trait IntervalResolve<N> {
-    type T: Note;
+    type R: Note;
 }
 
 macro_rules! impl_interval {
@@ -13,23 +13,23 @@ macro_rules! impl_interval {
         pub struct $t;
         impl Interval for $t {}
         impl<N: Note> IntervalResolve<N> for $t {
-             type T = $($b)+;
+             type R = $($b)+;
         }
     };
 }
 
-impl_interval!(P1, N::T);
-impl_interval!(m2, <<P1 as IntervalResolve<N>>::T as Note>::N);
-impl_interval!(M2, <<P1 as IntervalResolve<N>>::T as Note>::SS);
-impl_interval!(m3, <<M2 as IntervalResolve<N>>::T as Note>::N);
-impl_interval!(M3, <<M2 as IntervalResolve<N>>::T as Note>::SS);
-impl_interval!(P4, <<M3 as IntervalResolve<N>>::T as Note>::N);
-impl_interval!(d5, <<P4 as IntervalResolve<N>>::T as Note>::N);
-impl_interval!(P5, <<P4 as IntervalResolve<N>>::T as Note>::SS);
-impl_interval!(A5, <<P5 as IntervalResolve<N>>::T as Note>::N);
-impl_interval!(M6, <<P5 as IntervalResolve<N>>::T as Note>::SS);
-impl_interval!(m7, <<M6 as IntervalResolve<N>>::T as Note>::N);
-impl_interval!(M7, <<M6 as IntervalResolve<N>>::T as Note>::SS);
+impl_interval!(P1, N::R);
+impl_interval!(m2, <<P1 as IntervalResolve<N>>::R as Note>::S);
+impl_interval!(M2, <<P1 as IntervalResolve<N>>::R as Note>::T);
+impl_interval!(m3, <<M2 as IntervalResolve<N>>::R as Note>::S);
+impl_interval!(M3, <<M2 as IntervalResolve<N>>::R as Note>::T);
+impl_interval!(P4, <<M3 as IntervalResolve<N>>::R as Note>::S);
+impl_interval!(d5, <<P4 as IntervalResolve<N>>::R as Note>::S);
+impl_interval!(P5, <<P4 as IntervalResolve<N>>::R as Note>::T);
+impl_interval!(A5, <<P5 as IntervalResolve<N>>::R as Note>::S);
+impl_interval!(M6, <<P5 as IntervalResolve<N>>::R as Note>::T);
+impl_interval!(m7, <<M6 as IntervalResolve<N>>::R as Note>::S);
+impl_interval!(M7, <<M6 as IntervalResolve<N>>::R as Note>::T);
 
 #[allow(dead_code)]
 pub type KeyTuple<K> = (
@@ -85,22 +85,22 @@ pub struct MinorKey<Tonic: Note>(Tonic);
 macro_rules! impl_key {
     ($t:tt) => {
         impl Key for MajorKey<$t> {
-            type I = <P1 as IntervalResolve<$t>>::T;
-            type II = <M2 as IntervalResolve<$t>>::T;
-            type III = <M3 as IntervalResolve<$t>>::T;
-            type IV = <P4 as IntervalResolve<$t>>::T;
-            type V = <P5 as IntervalResolve<$t>>::T;
-            type VI = <M6 as IntervalResolve<$t>>::T;
-            type VII = <M7 as IntervalResolve<$t>>::T;
+            type I = <P1 as IntervalResolve<$t>>::R;
+            type II = <M2 as IntervalResolve<$t>>::R;
+            type III = <M3 as IntervalResolve<$t>>::R;
+            type IV = <P4 as IntervalResolve<$t>>::R;
+            type V = <P5 as IntervalResolve<$t>>::R;
+            type VI = <M6 as IntervalResolve<$t>>::R;
+            type VII = <M7 as IntervalResolve<$t>>::R;
         }
         impl Key for MinorKey<$t> {
-            type I = <P1 as IntervalResolve<$t>>::T;
-            type II = <M2 as IntervalResolve<$t>>::T;
-            type III = <m3 as IntervalResolve<$t>>::T;
-            type IV = <P4 as IntervalResolve<$t>>::T;
-            type V = <P5 as IntervalResolve<$t>>::T;
-            type VI = <A5 as IntervalResolve<$t>>::T;
-            type VII = <m7 as IntervalResolve<$t>>::T;
+            type I = <P1 as IntervalResolve<$t>>::R;
+            type II = <M2 as IntervalResolve<$t>>::R;
+            type III = <m3 as IntervalResolve<$t>>::R;
+            type IV = <P4 as IntervalResolve<$t>>::R;
+            type V = <P5 as IntervalResolve<$t>>::R;
+            type VI = <A5 as IntervalResolve<$t>>::R;
+            type VII = <m7 as IntervalResolve<$t>>::R;
         }
     };
 }
@@ -115,7 +115,7 @@ impl_key!(B);
 
 macro_rules! impl_key_for_signature {
     (inner $n:tt, $key:tt, $tonic:tt, $sig:tt) => {
-        type $n = <$sig<<$key<$tonic> as Key>::$n> as Note>::T;
+        type $n = <$sig<<$key<$tonic> as Key>::$n> as Note>::R;
     };
     ($key:tt, $tonic:tt, $sig:tt) => {
         impl Key for $key<$sig<$tonic>> {

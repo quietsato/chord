@@ -1,21 +1,33 @@
 use std::fmt::Debug;
 
 pub trait Note: Debug + Default {
-    type T: Note;
-    type S: Note;
+    type R: Note;
     type F: Note;
-    type N: Note;
-    type SS: Note;
+    type S: Note;
+    type T: Note;
     fn name(&self) -> String;
     fn id(&self) -> usize;
-    fn new() -> Self::T {
-        Self::T::default()
+    fn new() -> Self::R {
+        Default::default()
     }
     fn s(&self) -> Self::S {
-        Self::S::default()
+        Default::default()
     }
     fn f(&self) -> Self::F {
-        Self::F::default()
+        Default::default()
+    }
+}
+
+impl Note for () {
+    type R = Self;
+    type F = Self;
+    type S = Self;
+    type T = Self;
+    fn name(&self) -> String {
+        "".into()
+    }
+    fn id(&self) -> usize {
+        std::usize::MAX
     }
 }
 
@@ -41,11 +53,10 @@ pub struct Flat<N: Note>(Box<N>);
 macro_rules! impl_note {
     ($t:ty, $id:expr, $n:ty) => {
         impl Note for $t {
-            type T = $t;
-            type S = Sharp<$t>;
+            type R = $t;
             type F = Flat<$t>;
-            type N = $n;
-            type SS = <Sharp<$n> as Note>::T;
+            type S = $n;
+            type T = <Sharp<$n> as Note>::R;
             fn name(&self) -> String {
                 stringify!($t).into()
             }
@@ -67,11 +78,10 @@ impl_note!(B, 11, C);
 macro_rules! impl_note_for_sharp {
     (sharp(sharp($t:ty)) = $s:ty) => {
         impl Note for Sharp<$t> {
-            type T = Sharp<$t>;
-            type S = $s;
+            type R = Sharp<$t>;
             type F = $t;
-            type N = $s;
-            type SS = Sharp<$s>;
+            type S = $s;
+            type T = <Sharp<$s> as Note>::R;
             fn name(&self) -> String {
                 format!("{}♯ ", self.0.name())
             }
@@ -95,11 +105,10 @@ where
     N: Note,
     Sharp<N>: Note,
 {
-    type T = <<Sharp<N> as Note>::S as Note>::T;
-    type S = <<Self::T as Note>::S as Note>::T;
-    type F = N::T;
-    type N = <N::N as Note>::T;
-    type SS = <N::SS as Note>::T;
+    type R = <<Sharp<N> as Note>::S as Note>::R;
+    type F = N::R;
+    type S = <N::T as Note>::R;
+    type T = <<N::T as Note>::S as Note>::R;
     fn name(&self) -> String {
         self.0.s().name()
     }
@@ -113,11 +122,10 @@ where
     N: Note,
     Flat<N>: Note,
 {
-    type T = N::T;
-    type S = <N::S as Note>::T;
-    type F = <N::F as Note>::T;
-    type N = <N::N as Note>::T;
-    type SS = <N::SS as Note>::T;
+    type R = N::R;
+    type F = <N::F as Note>::R;
+    type S = <N::S as Note>::R;
+    type T = <N::T as Note>::R;
     fn name(&self) -> String {
         self.0.name()
     }
@@ -129,11 +137,10 @@ where
 macro_rules! impl_note_for_flat {
     ($t:ty, $f:ty) => {
         impl Note for Flat<$t> {
-            type T = Flat<$t>;
-            type S = $t;
+            type R = Flat<$t>;
             type F = $f;
-            type N = $t;
-            type SS = <$t as Note>::N;
+            type S = $t;
+            type T = <$t as Note>::S;
             fn name(&self) -> String {
                 format!("{}♭ ", self.0.name())
             }
@@ -156,13 +163,12 @@ impl<N> Note for Flat<Flat<N>>
 where
     N: Note,
     Flat<N>: Note,
-    Flat<N::N>: Note,
+    Flat<N::R>: Note,
 {
-    type T = <<Flat<N> as Note>::F as Note>::T;
-    type S = N::T;
-    type F = <<Self::T as Note>::F as Note>::T;
-    type N = N::N;
-    type SS = Flat<N::N>;
+    type R = <<Flat<N> as Note>::F as Note>::R;
+    type F = <<Self::R as Note>::F as Note>::R;
+    type S = <N::F as Note>::R;
+    type T = N::R;
     fn name(&self) -> String {
         self.0.f().name()
     }
@@ -176,11 +182,10 @@ where
     N: Note,
     Sharp<N>: Note,
 {
-    type T = N::T;
-    type S = <N::S as Note>::T;
-    type F = <N::F as Note>::T;
-    type N = <N::N as Note>::T;
-    type SS = <N::SS as Note>::T;
+    type R = N::R;
+    type F = <N::F as Note>::R;
+    type S = <N::S as Note>::R;
+    type T = <N::T as Note>::R;
     fn name(&self) -> String {
         self.0.name()
     }
@@ -209,18 +214,42 @@ mod test {
     }
 
     #[test]
+    fn test_flat_sharp() {
+        <<Flat<Flat<C>> as Note>::R>::default();
+        <<Flat<C> as Note>::R>::default();
+        <<C as Note>::R>::default();
+        <<Sharp<C> as Note>::R>::default();
+        <<Sharp<Sharp<C>> as Note>::R>::default();
+    }
+
+    #[test]
     fn test_interval_resolve() {
-        <<P1 as IntervalResolve<C>>::T>::default();
-        <<m2 as IntervalResolve<C>>::T>::default();
-        <<M2 as IntervalResolve<C>>::T>::default();
-        <<m3 as IntervalResolve<C>>::T>::default();
-        <<M3 as IntervalResolve<C>>::T>::default();
-        <<P4 as IntervalResolve<C>>::T>::default();
-        <<d5 as IntervalResolve<C>>::T>::default();
-        <<P5 as IntervalResolve<C>>::T>::default();
-        <<A5 as IntervalResolve<C>>::T>::default();
-        <<M6 as IntervalResolve<C>>::T>::default();
-        <<m7 as IntervalResolve<C>>::T>::default();
-        <<M7 as IntervalResolve<C>>::T>::default();
+        // C
+        <<P1 as IntervalResolve<C>>::R>::default();
+        <<m2 as IntervalResolve<C>>::R>::default();
+        <<M2 as IntervalResolve<C>>::R>::default();
+        <<m3 as IntervalResolve<C>>::R>::default();
+        <<M3 as IntervalResolve<C>>::R>::default();
+        <<P4 as IntervalResolve<C>>::R>::default();
+        <<d5 as IntervalResolve<C>>::R>::default();
+        <<P5 as IntervalResolve<C>>::R>::default();
+        <<A5 as IntervalResolve<C>>::R>::default();
+        <<M6 as IntervalResolve<C>>::R>::default();
+        <<m7 as IntervalResolve<C>>::R>::default();
+        <<M7 as IntervalResolve<C>>::R>::default();
+
+        // C♯
+        <<P1 as IntervalResolve<Sharp<C>>>::R>::default();
+        <<m2 as IntervalResolve<Sharp<C>>>::R>::default();
+        <<M2 as IntervalResolve<Sharp<C>>>::R>::default();
+        <<m3 as IntervalResolve<Sharp<C>>>::R>::default();
+        <<M3 as IntervalResolve<Sharp<C>>>::R>::default();
+        <<P4 as IntervalResolve<Sharp<C>>>::R>::default();
+        <<d5 as IntervalResolve<Sharp<C>>>::R>::default();
+        <<P5 as IntervalResolve<Sharp<C>>>::R>::default();
+        <<A5 as IntervalResolve<Sharp<C>>>::R>::default();
+        <<M6 as IntervalResolve<Sharp<C>>>::R>::default();
+        <<m7 as IntervalResolve<Sharp<C>>>::R>::default();
+        <<M7 as IntervalResolve<Sharp<C>>>::R>::default();
     }
 }

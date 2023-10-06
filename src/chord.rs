@@ -1,21 +1,5 @@
-use std::usize;
-
 use crate::key::*;
 use crate::note::*;
-
-impl Note for () {
-    type T = Self;
-    type S = Self;
-    type F = Self;
-    type N = Self;
-    type SS = Self;
-    fn name(&self) -> String {
-        "".into()
-    }
-    fn id(&self) -> usize {
-        usize::MAX
-    }
-}
 
 #[allow(dead_code)]
 type ChordTuple<C> = (
@@ -77,15 +61,15 @@ pub trait Chord: Default {
 
 pub trait TriadChord: Chord {}
 impl<R: Note> Chord for Major<R> {
-    type R = <P1 as IntervalResolve<R>>::T;
-    type P1 = <P1 as IntervalResolve<R>>::T;
+    type R = <P1 as IntervalResolve<R>>::R;
+    type P1 = <P1 as IntervalResolve<R>>::R;
     type m2 = ();
     type M2 = ();
     type m3 = ();
-    type M3 = <M3 as IntervalResolve<R>>::T;
+    type M3 = <M3 as IntervalResolve<R>>::R;
     type P4 = ();
     type d5 = ();
-    type P5 = <P5 as IntervalResolve<R>>::T;
+    type P5 = <P5 as IntervalResolve<R>>::R;
     type A5 = ();
     type M6 = ();
     type m7 = ();
@@ -105,14 +89,14 @@ impl<R: Note> TriadChord for Minor<R> {}
 
 impl<R: Note> Chord for Minor<R> {
     type R = R;
-    type P1 = <P1 as IntervalResolve<R>>::T;
+    type P1 = <P1 as IntervalResolve<R>>::R;
     type m2 = ();
     type M2 = ();
-    type m3 = <m3 as IntervalResolve<R>>::T;
+    type m3 = <m3 as IntervalResolve<R>>::R;
     type M3 = ();
     type P4 = ();
     type d5 = ();
-    type P5 = <P5 as IntervalResolve<R>>::T;
+    type P5 = <P5 as IntervalResolve<R>>::R;
     type A5 = ();
     type M6 = ();
     type m7 = ();
@@ -130,15 +114,15 @@ where
     MajorKey<R>: Key,
 {
     type R = R;
-    type P1 = <P1 as IntervalResolve<R>>::T;
+    type P1 = <P1 as IntervalResolve<R>>::R;
     type m2 = ();
     type M2 = ();
     type m3 = ();
-    type M3 = <M3 as IntervalResolve<R>>::T;
+    type M3 = <M3 as IntervalResolve<R>>::R;
     type P4 = ();
     type d5 = ();
     type P5 = ();
-    type A5 = <A5 as IntervalResolve<R>>::T;
+    type A5 = <A5 as IntervalResolve<R>>::R;
     type M6 = ();
     type m7 = ();
     type M7 = ();
@@ -154,13 +138,13 @@ where
     MajorKey<R>: Key,
 {
     type R = R;
-    type P1 = <P1 as IntervalResolve<R>>::T;
+    type P1 = <P1 as IntervalResolve<R>>::R;
     type m2 = ();
     type M2 = ();
-    type m3 = <m3 as IntervalResolve<R>>::T;
+    type m3 = <m3 as IntervalResolve<R>>::R;
     type M3 = ();
     type P4 = ();
-    type d5 = <d5 as IntervalResolve<R>>::T;
+    type d5 = <d5 as IntervalResolve<R>>::R;
     type P5 = ();
     type A5 = ();
     type M6 = ();
@@ -183,17 +167,17 @@ where
     Major<R>: TriadChord,
 {
     type R = R;
-    type P1 = <P1 as IntervalResolve<R>>::T;
+    type P1 = <P1 as IntervalResolve<R>>::R;
     type m2 = ();
     type M2 = ();
     type m3 = ();
-    type M3 = <M3 as IntervalResolve<R>>::T;
+    type M3 = <M3 as IntervalResolve<R>>::R;
     type P4 = ();
     type d5 = ();
-    type P5 = <P5 as IntervalResolve<R>>::T;
+    type P5 = <P5 as IntervalResolve<R>>::R;
     type A5 = ();
     type M6 = ();
-    type m7 = <m7 as IntervalResolve<R>>::T;
+    type m7 = <m7 as IntervalResolve<R>>::R;
     type M7 = ();
     fn name(&self) -> String {
         format!("{}7", self.0.name())
@@ -204,35 +188,35 @@ where
     Major<R>: TriadChord,
 {
     type R = R;
-    type P1 = <P1 as IntervalResolve<R>>::T;
+    type P1 = <P1 as IntervalResolve<R>>::R;
     type m2 = ();
     type M2 = ();
     type m3 = ();
-    type M3 = <M3 as IntervalResolve<R>>::T;
+    type M3 = <M3 as IntervalResolve<R>>::R;
     type P4 = ();
     type d5 = ();
-    type P5 = <P5 as IntervalResolve<R>>::T;
+    type P5 = <P5 as IntervalResolve<R>>::R;
     type A5 = ();
     type M6 = ();
     type m7 = ();
-    type M7 = <M7 as IntervalResolve<R>>::T;
+    type M7 = <M7 as IntervalResolve<R>>::R;
     fn name(&self) -> String {
         format!("{}maj7", self.0.name())
     }
 }
 impl<R: Note> Chord for MinorSeventh<R> {
-    type R = <P1 as IntervalResolve<R>>::T;
-    type P1 = <P1 as IntervalResolve<R>>::T;
+    type R = <P1 as IntervalResolve<R>>::R;
+    type P1 = <P1 as IntervalResolve<R>>::R;
     type m2 = ();
     type M2 = ();
-    type m3 = <m3 as IntervalResolve<R>>::T;
+    type m3 = <m3 as IntervalResolve<R>>::R;
     type M3 = ();
     type P4 = ();
     type d5 = ();
-    type P5 = <P5 as IntervalResolve<R>>::T;
+    type P5 = <P5 as IntervalResolve<R>>::R;
     type A5 = ();
     type M6 = ();
-    type m7 = <m7 as IntervalResolve<R>>::T;
+    type m7 = <m7 as IntervalResolve<R>>::R;
     type M7 = ();
     fn name(&self) -> String {
         format!("{}m7", self.0.name())
@@ -246,9 +230,9 @@ pub struct Sus4<C: Chord>(C);
 
 impl<C: Chord> Chord for Sus2<C> {
     type R = C::R;
-    type P1 = <P1 as IntervalResolve<C::R>>::T;
+    type P1 = <P1 as IntervalResolve<C::R>>::R;
     type m2 = C::m2;
-    type M2 = <M2 as IntervalResolve<C::R>>::T;
+    type M2 = <M2 as IntervalResolve<C::R>>::R;
     type m3 = ();
     type M3 = ();
     type P4 = C::P4;
@@ -265,12 +249,12 @@ impl<C: Chord> Chord for Sus2<C> {
 
 impl<C: Chord> Chord for Sus4<C> {
     type R = C::R;
-    type P1 = <P1 as IntervalResolve<C::R>>::T;
+    type P1 = <P1 as IntervalResolve<C::R>>::R;
     type m2 = C::m2;
     type M2 = C::M2;
     type m3 = ();
     type M3 = ();
-    type P4 = <P4 as IntervalResolve<C::R>>::T;
+    type P4 = <P4 as IntervalResolve<C::R>>::R;
     type d5 = C::d5;
     type P5 = C::P5;
     type A5 = C::A5;
