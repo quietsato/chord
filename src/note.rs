@@ -192,6 +192,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::key::*;
     use test_case::test_case;
 
     #[test_case(C, "C")]
@@ -205,5 +206,21 @@ mod test {
     #[test_case(E, Flat::<F>::new())]
     fn test_note_id(n1: impl Note, n2: impl Note) {
         assert_eq!(n1.id(), n2.id());
+    }
+
+    fn test_types() {
+        <M1<C>>::default();
+        <m2<C>>::default();
+        <M2<C>>::default();
+        <m3<C>>::default();
+        <M3<C>>::default();
+        <M4<C>>::default();
+        <d5<C>>::default();
+        <M5<C>>::default();
+        <A5<C>>::default();
+        <M6<C>>::default();
+        <d7<C>>::default();
+        <m7<C>>::default();
+        <M7<C>>::default();
     }
 }

@@ -1,6 +1,25 @@
 use crate::note::*;
 use std::fmt::Debug;
 
+pub type M1<N> = <N as Note>::T;
+#[allow(non_camel_case_types)]
+pub type m2<N> = <M1<N> as Note>::N;
+pub type M2<N> = <M1<N> as Note>::SS;
+#[allow(non_camel_case_types)]
+pub type m3<N> = <M2<N> as Note>::N;
+pub type M3<N> = <M2<N> as Note>::SS;
+pub type M4<N> = <M3<N> as Note>::N;
+#[allow(non_camel_case_types)]
+pub type d5<N> = <M4<N> as Note>::N;
+pub type M5<N> = <M4<N> as Note>::SS;
+pub type A5<N> = <M5<N> as Note>::S;
+pub type M6<N> = <M5<N> as Note>::SS;
+#[allow(non_camel_case_types)]
+pub type d7<N> = <Flat<m7<N>> as Note>::T;
+#[allow(non_camel_case_types)]
+pub type m7<N> = <M6<N> as Note>::N;
+pub type M7<N> = <M6<N> as Note>::SS;
+
 pub trait Key: Default {
     type I: Note;
     type II: Note;
