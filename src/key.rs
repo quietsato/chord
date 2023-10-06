@@ -49,6 +49,19 @@ pub trait Key: Default {
     fn vii(&self) -> Self::VII {
         Default::default()
     }
+    fn key_tuple(
+        &self,
+    ) -> (
+        Self::I,
+        Self::II,
+        Self::III,
+        Self::IV,
+        Self::V,
+        Self::VI,
+        Self::VII,
+    ) {
+        Default::default()
+    }
 }
 
 #[derive(Debug, Default)]
