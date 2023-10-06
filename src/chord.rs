@@ -21,14 +21,14 @@ impl Note for () {
 type ChordTuple<C> = (
     <C as Chord>::P1,
     <C as Chord>::m2,
-    <C as Chord>::P2,
+    <C as Chord>::M2,
     <C as Chord>::m3,
-    <C as Chord>::P3,
+    <C as Chord>::M3,
     <C as Chord>::P4,
     <C as Chord>::d5,
     <C as Chord>::P5,
     <C as Chord>::A5,
-    <C as Chord>::M6d7,
+    <C as Chord>::M6,
     <C as Chord>::m7,
     <C as Chord>::M7,
 );
@@ -38,14 +38,14 @@ pub trait Chord: Default {
     type R: Note;
     type P1: Note;
     type m2: Note;
-    type P2: Note;
+    type M2: Note;
     type m3: Note;
-    type P3: Note;
+    type M3: Note;
     type P4: Note;
     type d5: Note;
     type P5: Note;
     type A5: Note;
-    type M6d7: Note;
+    type M6: Note;
     type m7: Note;
     type M7: Note;
     fn name(&self) -> String;
@@ -56,14 +56,14 @@ pub trait Chord: Default {
         [
             Self::P1::default().name(),
             Self::m2::default().name(),
-            Self::P2::default().name(),
+            Self::M2::default().name(),
             Self::m3::default().name(),
-            Self::P3::default().name(),
+            Self::M3::default().name(),
             Self::P4::default().name(),
             Self::d5::default().name(),
             Self::P5::default().name(),
             Self::A5::default().name(),
-            Self::M6d7::default().name(),
+            Self::M6::default().name(),
             Self::m7::default().name(),
             Self::M7::default().name(),
         ]
@@ -76,105 +76,51 @@ pub trait Chord: Default {
 }
 
 pub trait TriadChord: Chord {}
+impl<R: Note> Chord for Major<R> {
+    type R = <P1 as IntervalResolve<R>>::T;
+    type P1 = <P1 as IntervalResolve<R>>::T;
+    type m2 = ();
+    type M2 = ();
+    type m3 = ();
+    type M3 = <M3 as IntervalResolve<R>>::T;
+    type P4 = ();
+    type d5 = ();
+    type P5 = <P5 as IntervalResolve<R>>::T;
+    type A5 = ();
+    type M6 = ();
+    type m7 = ();
+    type M7 = ();
+    fn name(&self) -> String {
+        R::default().name()
+    }
+}
 
 #[derive(Debug, Default)]
 pub struct Major<R: Note>(R);
+impl<R: Note> TriadChord for Major<R> {}
 
 #[derive(Debug, Default)]
 pub struct Minor<R: Note>(R);
+impl<R: Note> TriadChord for Minor<R> {}
 
-macro_rules! impl_triad {
-    ($t:ty, $sig:tt) => {
-        impl Chord for Major<$sig<$t>> {
-            type R = <$sig<$t> as Note>::T;
-            type P1 = M1<$sig<$t>>;
-            type m2 = ();
-            type P2 = ();
-            type m3 = ();
-            type P3 = M3<$sig<$t>>;
-            type P4 = ();
-            type d5 = ();
-            type P5 = M5<$sig<$t>>;
-            type A5 = ();
-            type M6d7 = ();
-            type m7 = ();
-            type M7 = ();
-            fn name(&self) -> String {
-                <$sig<$t>>::default().name()
-            }
-        }
-        impl TriadChord for Major<$sig<$t>> {}
-        impl Chord for Minor<$sig<$t>> {
-            type R = <$sig<$t> as Note>::T;
-            type P1 = M1<$sig<$t>>;
-            type m2 = ();
-            type P2 = ();
-            type m3 = m3<$sig<$t>>;
-            type P3 = ();
-            type P4 = ();
-            type d5 = ();
-            type P5 = M5<$sig<$t>>;
-            type A5 = ();
-            type M6d7 = ();
-            type m7 = ();
-            type M7 = ();
-            fn name(&self) -> String {
-                format!("{}m", <$sig<$t>>::default().name())
-            }
-        }
-        impl TriadChord for Minor<$sig<$t>> {}
-    };
-    ($t:ty) => {
-        impl Chord for Major<$t> {
-            type R = $t;
-            type P1 = M1<$t>;
-            type m2 = ();
-            type P2 = ();
-            type m3 = ();
-            type P3 = M3<$t>;
-            type P4 = ();
-            type d5 = ();
-            type P5 = M5<$t>;
-            type A5 = ();
-            type M6d7 = ();
-            type m7 = ();
-            type M7 = ();
-            fn name(&self) -> String {
-                <$t>::default().name()
-            }
-        }
-        impl TriadChord for Major<$t> {}
-        impl Chord for Minor<$t> {
-            type R = $t;
-            type P1 = M1<$t>;
-            type m2 = ();
-            type P2 = ();
-            type m3 = m3<$t>;
-            type P3 = ();
-            type P4 = ();
-            type d5 = ();
-            type P5 = M5<$t>;
-            type A5 = ();
-            type M6d7 = ();
-            type m7 = ();
-            type M7 = ();
-            fn name(&self) -> String {
-                format!("{}m", <$t>::default().name())
-            }
-        }
-        impl TriadChord for Minor<$t> {}
-        impl_triad!($t, Sharp);
-        impl_triad!($t, Flat);
-    };
+impl<R: Note> Chord for Minor<R> {
+    type R = R;
+    type P1 = <P1 as IntervalResolve<R>>::T;
+    type m2 = ();
+    type M2 = ();
+    type m3 = <m3 as IntervalResolve<R>>::T;
+    type M3 = ();
+    type P4 = ();
+    type d5 = ();
+    type P5 = <P5 as IntervalResolve<R>>::T;
+    type A5 = ();
+    type M6 = ();
+    type m7 = ();
+    type M7 = ();
+    fn name(&self) -> String {
+        format!("{}m", R::default().name())
+    }
 }
-
-impl_triad!(C);
-impl_triad!(D);
-impl_triad!(E);
-impl_triad!(F);
-impl_triad!(G);
-impl_triad!(A);
-impl_triad!(B);
 
 #[derive(Debug, Default)]
 struct Aug<R: Note>(R);
@@ -184,20 +130,44 @@ where
     MajorKey<R>: Key,
 {
     type R = R;
-    type P1 = M1<R>;
+    type P1 = <P1 as IntervalResolve<R>>::T;
     type m2 = ();
-    type P2 = ();
+    type M2 = ();
     type m3 = ();
-    type P3 = M3<R>;
+    type M3 = <M3 as IntervalResolve<R>>::T;
     type P4 = ();
     type d5 = ();
     type P5 = ();
-    type A5 = A5<R>;
-    type M6d7 = ();
+    type A5 = <A5 as IntervalResolve<R>>::T;
+    type M6 = ();
     type m7 = ();
     type M7 = ();
     fn name(&self) -> String {
         format!("{}aug", self.0.name())
+    }
+}
+
+#[derive(Debug, Default)]
+struct Dim<R: Note>(R);
+impl<R: Note> Chord for Dim<R>
+where
+    MajorKey<R>: Key,
+{
+    type R = R;
+    type P1 = <P1 as IntervalResolve<R>>::T;
+    type m2 = ();
+    type M2 = ();
+    type m3 = <m3 as IntervalResolve<R>>::T;
+    type M3 = ();
+    type P4 = ();
+    type d5 = <d5 as IntervalResolve<R>>::T;
+    type P5 = ();
+    type A5 = ();
+    type M6 = ();
+    type m7 = ();
+    type M7 = ();
+    fn name(&self) -> String {
+        format!("{}dim", self.0.name())
     }
 }
 
@@ -213,17 +183,17 @@ where
     Major<R>: TriadChord,
 {
     type R = R;
-    type P1 = M1<R>;
+    type P1 = <P1 as IntervalResolve<R>>::T;
     type m2 = ();
-    type P2 = ();
+    type M2 = ();
     type m3 = ();
-    type P3 = M3<R>;
+    type M3 = <M3 as IntervalResolve<R>>::T;
     type P4 = ();
     type d5 = ();
-    type P5 = M5<R>;
+    type P5 = <P5 as IntervalResolve<R>>::T;
     type A5 = ();
-    type M6d7 = ();
-    type m7 = m7<R>;
+    type M6 = ();
+    type m7 = <m7 as IntervalResolve<R>>::T;
     type M7 = ();
     fn name(&self) -> String {
         format!("{}7", self.0.name())
@@ -234,38 +204,143 @@ where
     Major<R>: TriadChord,
 {
     type R = R;
-    type P1 = M1<R>;
+    type P1 = <P1 as IntervalResolve<R>>::T;
     type m2 = ();
-    type P2 = ();
+    type M2 = ();
     type m3 = ();
-    type P3 = M3<R>;
+    type M3 = <M3 as IntervalResolve<R>>::T;
     type P4 = ();
     type d5 = ();
-    type P5 = M5<R>;
+    type P5 = <P5 as IntervalResolve<R>>::T;
     type A5 = ();
-    type M6d7 = ();
+    type M6 = ();
     type m7 = ();
-    type M7 = M7<R>;
+    type M7 = <M7 as IntervalResolve<R>>::T;
     fn name(&self) -> String {
         format!("{}maj7", self.0.name())
     }
 }
 impl<R: Note> Chord for MinorSeventh<R> {
-    type R = R;
-    type P1 = M1<R>;
+    type R = <P1 as IntervalResolve<R>>::T;
+    type P1 = <P1 as IntervalResolve<R>>::T;
     type m2 = ();
-    type P2 = ();
-    type m3 = m3<R>;
-    type P3 = ();
+    type M2 = ();
+    type m3 = <m3 as IntervalResolve<R>>::T;
+    type M3 = ();
     type P4 = ();
     type d5 = ();
-    type P5 = M5<R>;
+    type P5 = <P5 as IntervalResolve<R>>::T;
     type A5 = ();
-    type M6d7 = ();
-    type m7 = m7<R>;
+    type M6 = ();
+    type m7 = <m7 as IntervalResolve<R>>::T;
     type M7 = ();
     fn name(&self) -> String {
         format!("{}m7", self.0.name())
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Sus2<C: Chord>(C);
+#[derive(Debug, Default)]
+pub struct Sus4<C: Chord>(C);
+
+impl<C: Chord> Chord for Sus2<C> {
+    type R = C::R;
+    type P1 = <P1 as IntervalResolve<C::R>>::T;
+    type m2 = C::m2;
+    type M2 = <M2 as IntervalResolve<C::R>>::T;
+    type m3 = ();
+    type M3 = ();
+    type P4 = C::P4;
+    type d5 = C::d5;
+    type P5 = C::P5;
+    type A5 = C::A5;
+    type M6 = C::M6;
+    type m7 = C::m7;
+    type M7 = C::M7;
+    fn name(&self) -> String {
+        format!("{}sus4", self.0.name())
+    }
+}
+
+impl<C: Chord> Chord for Sus4<C> {
+    type R = C::R;
+    type P1 = <P1 as IntervalResolve<C::R>>::T;
+    type m2 = C::m2;
+    type M2 = C::M2;
+    type m3 = ();
+    type M3 = ();
+    type P4 = <P4 as IntervalResolve<C::R>>::T;
+    type d5 = C::d5;
+    type P5 = C::P5;
+    type A5 = C::A5;
+    type M6 = C::M6;
+    type m7 = C::m7;
+    type M7 = C::M7;
+    fn name(&self) -> String {
+        format!("{}sus4", self.0.name())
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Omit1<C: Chord>(C);
+#[derive(Debug, Default)]
+pub struct Omit3<C: Chord>(C);
+#[derive(Debug, Default)]
+pub struct Omit5<C: Chord>(C);
+
+impl<C: Chord> Chord for Omit1<C> {
+    type R = C::R;
+    type P1 = ();
+    type m2 = C::m2;
+    type M2 = C::M2;
+    type m3 = C::m3;
+    type M3 = C::M3;
+    type P4 = C::P4;
+    type d5 = C::d5;
+    type P5 = C::P5;
+    type A5 = C::A5;
+    type M6 = C::M6;
+    type m7 = C::m7;
+    type M7 = C::M7;
+    fn name(&self) -> String {
+        format!("{}omit1", C::default().name())
+    }
+}
+impl<C: Chord> Chord for Omit3<C> {
+    type R = C::R;
+    type P1 = C::P1;
+    type m2 = C::m2;
+    type M2 = C::M2;
+    type m3 = ();
+    type M3 = ();
+    type P4 = C::P4;
+    type d5 = C::d5;
+    type P5 = C::P5;
+    type A5 = C::A5;
+    type M6 = C::M6;
+    type m7 = C::m7;
+    type M7 = C::M7;
+    fn name(&self) -> String {
+        format!("{}omit3", C::default().name())
+    }
+}
+impl<C: Chord> Chord for Omit5<C> {
+    type R = C::R;
+    type P1 = C::P1;
+    type m2 = C::m2;
+    type M2 = C::M2;
+    type m3 = C::m3;
+    type M3 = C::M3;
+    type P4 = C::P4;
+    type d5 = C::d5;
+    type P5 = ();
+    type A5 = C::A5;
+    type M6 = C::M6;
+    type m7 = C::m7;
+    type M7 = C::M7;
+    fn name(&self) -> String {
+        format!("{}omit5", C::default().name())
     }
 }
 
@@ -274,25 +349,29 @@ mod test {
     use super::*;
     #[test]
     fn test() {
-        let chord = <Minor<Flat<D>>>::default();
-        println!("{}: {}", chord.name(), chord.notes());
-
-        let chord = <Minor<D>>::default();
-        println!("{}: {}", chord.name(), chord.notes());
-
-        let chord = <Major<B>>::default();
-        println!("{}: {}", chord.name(), chord.notes());
-
-        let chord = <Major<Sharp<C>>>::default();
-        println!("{}: {}", chord.name(), chord.notes());
         <Major<C>>::default().notes_tuple();
+        <Major<B>>::default().notes_tuple();
 
-        let chord = <Aug<C>>::default();
+        <Minor<D>>::default().notes_tuple();
+        <Minor<E>>::default().notes_tuple();
+        <Minor<Flat<D>>>::default().notes_tuple();
+
         <Aug<C>>::default().notes_tuple();
-        println!("{}: {}", chord.name(), chord.notes());
+
+        <Dim<B>>::default().notes_tuple();
+        <Dim<C>>::default().notes_tuple();
+        <Dim<G>>::default().notes_tuple();
 
         <Seventh<C>>::default().notes_tuple();
         <MajorSeventh<C>>::default().notes_tuple();
         <MinorSeventh<C>>::default().notes_tuple();
+
+        <Sus4<Major<C>>>::default().notes_tuple();
+        <Sus4<Seventh<C>>>::default().notes_tuple();
+        <Sus2<Seventh<C>>>::default().notes_tuple();
+
+        <Omit1<Major<C>>>::default().notes_tuple();
+        <Omit3<Major<C>>>::default().notes_tuple();
+        <Omit5<Major<C>>>::default().notes_tuple();
     }
 }

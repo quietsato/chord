@@ -208,19 +208,19 @@ mod test {
         assert_eq!(n1.id(), n2.id());
     }
 
-    fn test_types() {
-        <M1<C>>::default();
-        <m2<C>>::default();
-        <M2<C>>::default();
-        <m3<C>>::default();
-        <M3<C>>::default();
-        <M4<C>>::default();
-        <d5<C>>::default();
-        <M5<C>>::default();
-        <A5<C>>::default();
-        <M6<C>>::default();
-        <d7<C>>::default();
-        <m7<C>>::default();
-        <M7<C>>::default();
+    #[test]
+    fn test_interval_resolve() {
+        <<P1 as IntervalResolve<C>>::T>::default();
+        <<m2 as IntervalResolve<C>>::T>::default();
+        <<M2 as IntervalResolve<C>>::T>::default();
+        <<m3 as IntervalResolve<C>>::T>::default();
+        <<M3 as IntervalResolve<C>>::T>::default();
+        <<P4 as IntervalResolve<C>>::T>::default();
+        <<d5 as IntervalResolve<C>>::T>::default();
+        <<P5 as IntervalResolve<C>>::T>::default();
+        <<A5 as IntervalResolve<C>>::T>::default();
+        <<M6 as IntervalResolve<C>>::T>::default();
+        <<m7 as IntervalResolve<C>>::T>::default();
+        <<M7 as IntervalResolve<C>>::T>::default();
     }
 }

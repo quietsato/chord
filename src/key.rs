@@ -1,24 +1,46 @@
 use crate::note::*;
 use std::fmt::Debug;
 
-pub type M1<N> = <N as Note>::T;
-#[allow(non_camel_case_types)]
-pub type m2<N> = <M1<N> as Note>::N;
-pub type M2<N> = <M1<N> as Note>::SS;
-#[allow(non_camel_case_types)]
-pub type m3<N> = <M2<N> as Note>::N;
-pub type M3<N> = <M2<N> as Note>::SS;
-pub type M4<N> = <M3<N> as Note>::N;
-#[allow(non_camel_case_types)]
-pub type d5<N> = <M4<N> as Note>::N;
-pub type M5<N> = <M4<N> as Note>::SS;
-pub type A5<N> = <M5<N> as Note>::S;
-pub type M6<N> = <M5<N> as Note>::SS;
-#[allow(non_camel_case_types)]
-pub type d7<N> = <Flat<m7<N>> as Note>::T;
-#[allow(non_camel_case_types)]
-pub type m7<N> = <M6<N> as Note>::N;
-pub type M7<N> = <M6<N> as Note>::SS;
+pub trait Interval {}
+pub trait IntervalResolve<N> {
+    type T: Note;
+}
+
+macro_rules! impl_interval {
+    ($t:tt, $($b:tt)+) => {
+        #[allow(non_camel_case_types)]
+        #[derive(Debug, Default)]
+        pub struct $t;
+        impl Interval for $t {}
+        impl<N: Note> IntervalResolve<N> for $t {
+             type T = $($b)+;
+        }
+    };
+}
+
+impl_interval!(P1, N::T);
+impl_interval!(m2, <<P1 as IntervalResolve<N>>::T as Note>::N);
+impl_interval!(M2, <<P1 as IntervalResolve<N>>::T as Note>::SS);
+impl_interval!(m3, <<M2 as IntervalResolve<N>>::T as Note>::N);
+impl_interval!(M3, <<M2 as IntervalResolve<N>>::T as Note>::SS);
+impl_interval!(P4, <<M3 as IntervalResolve<N>>::T as Note>::N);
+impl_interval!(d5, <<P4 as IntervalResolve<N>>::T as Note>::N);
+impl_interval!(P5, <<P4 as IntervalResolve<N>>::T as Note>::SS);
+impl_interval!(A5, <<P5 as IntervalResolve<N>>::T as Note>::N);
+impl_interval!(M6, <<P5 as IntervalResolve<N>>::T as Note>::SS);
+impl_interval!(m7, <<M6 as IntervalResolve<N>>::T as Note>::N);
+impl_interval!(M7, <<M6 as IntervalResolve<N>>::T as Note>::SS);
+
+#[allow(dead_code)]
+pub type KeyTuple<K> = (
+    <K as Key>::I,
+    <K as Key>::II,
+    <K as Key>::III,
+    <K as Key>::IV,
+    <K as Key>::V,
+    <K as Key>::VI,
+    <K as Key>::VII,
+);
 
 pub trait Key: Default {
     type I: Note;
@@ -49,110 +71,81 @@ pub trait Key: Default {
     fn vii(&self) -> Self::VII {
         Default::default()
     }
-    fn key_tuple(
-        &self,
-    ) -> (
-        Self::I,
-        Self::II,
-        Self::III,
-        Self::IV,
-        Self::V,
-        Self::VI,
-        Self::VII,
-    ) {
+    fn key_tuple(&self) -> KeyTuple<Self> {
         Default::default()
     }
 }
 
 #[derive(Debug, Default)]
 pub struct MajorKey<Tonic: Note>(Tonic);
-impl Key for MajorKey<C> {
-    type I = C;
-    type II = D;
-    type III = E;
-    type IV = F;
-    type V = G;
-    type VI = A;
-    type VII = B;
-}
-
-macro_rules! impl_diatonic_scale {
-    (inner $n:tt, $key:tt, $tonic:ty, 1) => {
-        type $n = <<$key<$tonic> as Key>::$n as Note>::N;
-    };
-    (inner $n:tt, $key:tt, $tonic:ty, 2) => {
-        type $n = <<$key<$tonic> as Key>::$n as Note>::SS;
-    };
-    ($key:tt; $tonic:ty, $d:tt, $t:ty) => {
-        impl Key for $key<$t> {
-            impl_diatonic_scale!(inner I, $key, $tonic, $d);
-            impl_diatonic_scale!(inner II, $key, $tonic, $d);
-            impl_diatonic_scale!(inner III, $key, $tonic, $d);
-            impl_diatonic_scale!(inner IV, $key, $tonic, $d);
-            impl_diatonic_scale!(inner V, $key, $tonic, $d);
-            impl_diatonic_scale!(inner VI, $key, $tonic, $d);
-            impl_diatonic_scale!(inner VII, $key, $tonic, $d);
-        }
-    };
-}
-impl_diatonic_scale!(MajorKey; C, 2, D);
-impl_diatonic_scale!(MajorKey; D, 2, E);
-impl_diatonic_scale!(MajorKey; E, 1, F);
-impl_diatonic_scale!(MajorKey; F, 2, G);
-impl_diatonic_scale!(MajorKey; G, 2, A);
-impl_diatonic_scale!(MajorKey; A, 2, B);
 
 #[derive(Debug, Default)]
 pub struct MinorKey<Tonic: Note>(Tonic);
-impl Key for MinorKey<A> {
-    type I = A;
-    type II = B;
-    type III = C;
-    type IV = D;
-    type V = E;
-    type VI = F;
-    type VII = G;
-}
-impl_diatonic_scale!(MinorKey; A, 2, B);
-impl_diatonic_scale!(MinorKey; B, 1, C);
-impl_diatonic_scale!(MinorKey; C, 2, D);
-impl_diatonic_scale!(MinorKey; D, 2, E);
-impl_diatonic_scale!(MinorKey; E, 1, F);
-impl_diatonic_scale!(MinorKey; F, 2, G);
 
-macro_rules! impl_diatonic_scale_for_signature {
+macro_rules! impl_key {
+    ($t:tt) => {
+        impl Key for MajorKey<$t> {
+            type I = <P1 as IntervalResolve<$t>>::T;
+            type II = <M2 as IntervalResolve<$t>>::T;
+            type III = <M3 as IntervalResolve<$t>>::T;
+            type IV = <P4 as IntervalResolve<$t>>::T;
+            type V = <P5 as IntervalResolve<$t>>::T;
+            type VI = <M6 as IntervalResolve<$t>>::T;
+            type VII = <M7 as IntervalResolve<$t>>::T;
+        }
+        impl Key for MinorKey<$t> {
+            type I = <P1 as IntervalResolve<$t>>::T;
+            type II = <M2 as IntervalResolve<$t>>::T;
+            type III = <m3 as IntervalResolve<$t>>::T;
+            type IV = <P4 as IntervalResolve<$t>>::T;
+            type V = <P5 as IntervalResolve<$t>>::T;
+            type VI = <A5 as IntervalResolve<$t>>::T;
+            type VII = <m7 as IntervalResolve<$t>>::T;
+        }
+    };
+}
+
+impl_key!(C);
+impl_key!(D);
+impl_key!(E);
+impl_key!(F);
+impl_key!(G);
+impl_key!(A);
+impl_key!(B);
+
+macro_rules! impl_key_for_signature {
     (inner $n:tt, $key:tt, $tonic:tt, $sig:tt) => {
         type $n = <$sig<<$key<$tonic> as Key>::$n> as Note>::T;
     };
     ($key:tt, $tonic:tt, $sig:tt) => {
         impl Key for $key<$sig<$tonic>> {
-            impl_diatonic_scale_for_signature!(inner I, $key, $tonic, $sig);
-            impl_diatonic_scale_for_signature!(inner II, $key, $tonic, $sig);
-            impl_diatonic_scale_for_signature!(inner III, $key, $tonic, $sig);
-            impl_diatonic_scale_for_signature!(inner IV, $key, $tonic, $sig);
-            impl_diatonic_scale_for_signature!(inner V, $key, $tonic, $sig);
-            impl_diatonic_scale_for_signature!(inner VI, $key, $tonic, $sig);
-            impl_diatonic_scale_for_signature!(inner VII, $key, $tonic, $sig);
+            impl_key_for_signature!(inner I, $key, $tonic, $sig);
+            impl_key_for_signature!(inner II, $key, $tonic, $sig);
+            impl_key_for_signature!(inner III, $key, $tonic, $sig);
+            impl_key_for_signature!(inner IV, $key, $tonic, $sig);
+            impl_key_for_signature!(inner V, $key, $tonic, $sig);
+            impl_key_for_signature!(inner VI, $key, $tonic, $sig);
+            impl_key_for_signature!(inner VII, $key, $tonic, $sig);
         }
     };
 }
-impl_diatonic_scale_for_signature!(MajorKey, C, Sharp);
-impl_diatonic_scale_for_signature!(MajorKey, F, Sharp);
-impl_diatonic_scale_for_signature!(MajorKey, C, Flat);
-impl_diatonic_scale_for_signature!(MajorKey, D, Flat);
-impl_diatonic_scale_for_signature!(MajorKey, E, Flat);
-impl_diatonic_scale_for_signature!(MajorKey, G, Flat);
-impl_diatonic_scale_for_signature!(MajorKey, A, Flat);
-impl_diatonic_scale_for_signature!(MajorKey, B, Flat);
+impl_key_for_signature!(MajorKey, C, Sharp);
+impl_key_for_signature!(MajorKey, F, Sharp);
+impl_key_for_signature!(MajorKey, C, Flat);
+impl_key_for_signature!(MajorKey, D, Flat);
+impl_key_for_signature!(MajorKey, E, Flat);
+impl_key_for_signature!(MajorKey, G, Flat);
+impl_key_for_signature!(MajorKey, A, Flat);
+impl_key_for_signature!(MajorKey, B, Flat);
 
-impl_diatonic_scale_for_signature!(MinorKey, A, Sharp);
-impl_diatonic_scale_for_signature!(MinorKey, C, Sharp);
-impl_diatonic_scale_for_signature!(MinorKey, D, Sharp);
-impl_diatonic_scale_for_signature!(MinorKey, F, Sharp);
-impl_diatonic_scale_for_signature!(MinorKey, G, Sharp);
-impl_diatonic_scale_for_signature!(MinorKey, A, Flat);
-impl_diatonic_scale_for_signature!(MinorKey, B, Flat);
-impl_diatonic_scale_for_signature!(MinorKey, E, Flat);
+impl_key_for_signature!(MinorKey, A, Sharp);
+impl_key_for_signature!(MinorKey, C, Sharp);
+impl_key_for_signature!(MinorKey, D, Sharp);
+impl_key_for_signature!(MinorKey, F, Sharp);
+impl_key_for_signature!(MinorKey, G, Sharp);
+impl_key_for_signature!(MinorKey, A, Flat);
+impl_key_for_signature!(MinorKey, B, Flat);
+impl_key_for_signature!(MinorKey, E, Flat);
 
 #[cfg(test)]
 mod test {
