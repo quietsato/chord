@@ -2,8 +2,13 @@ use std::fmt::Debug;
 
 pub trait Note: Debug + Default {
     type R: Note;
+    /// Flat
     type F: Note;
+    /// Sharp
     type S: Note;
+    /// Semitone
+    type ST: Note;
+    /// Tone
     type T: Note;
     fn name(&self) -> String;
     fn id(&self) -> usize;
@@ -22,6 +27,7 @@ impl Note for () {
     type R = Self;
     type F = Self;
     type S = Self;
+    type ST = Self;
     type T = Self;
     fn name(&self) -> String {
         "".into()
@@ -55,7 +61,8 @@ macro_rules! impl_note {
         impl Note for $t {
             type R = $t;
             type F = Flat<$t>;
-            type S = $n;
+            type S = Sharp<$t>;
+            type ST = $n;
             type T = <Sharp<$n> as Note>::R;
             fn name(&self) -> String {
                 stringify!($t).into()
@@ -81,7 +88,8 @@ macro_rules! impl_note_for_sharp {
             type R = Sharp<$t>;
             type F = $t;
             type S = $s;
-            type T = <Sharp<$s> as Note>::R;
+            type ST = $s;
+            type T = Sharp<$s>;
             fn name(&self) -> String {
                 format!("{}♯ ", self.0.name())
             }
@@ -107,8 +115,9 @@ where
 {
     type R = <<Sharp<N> as Note>::S as Note>::R;
     type F = N::R;
-    type S = <N::T as Note>::R;
-    type T = <<N::T as Note>::S as Note>::R;
+    type S = <<<Sharp<N> as Note>::S as Note>::S as Note>::R;
+    type ST = <<<Sharp<N> as Note>::S as Note>::ST as Note>::R;
+    type T = <<<Sharp<N> as Note>::S as Note>::T as Note>::R;
     fn name(&self) -> String {
         self.0.s().name()
     }
@@ -125,6 +134,7 @@ where
     type R = N::R;
     type F = <N::F as Note>::R;
     type S = <N::S as Note>::R;
+    type ST = <N::ST as Note>::R;
     type T = <N::T as Note>::R;
     fn name(&self) -> String {
         self.0.name()
@@ -140,7 +150,8 @@ macro_rules! impl_note_for_flat {
             type R = Flat<$t>;
             type F = $f;
             type S = $t;
-            type T = <$t as Note>::S;
+            type ST = <<$t as Note>::ST as Note>::F;
+            type T = <<$t as Note>::ST as Note>::R;
             fn name(&self) -> String {
                 format!("{}♭ ", self.0.name())
             }
@@ -168,6 +179,7 @@ where
     type R = <<Flat<N> as Note>::F as Note>::R;
     type F = <<Self::R as Note>::F as Note>::R;
     type S = <N::F as Note>::R;
+    type ST = <N::F as Note>::R;
     type T = N::R;
     fn name(&self) -> String {
         self.0.f().name()
@@ -185,6 +197,7 @@ where
     type R = N::R;
     type F = <N::F as Note>::R;
     type S = <N::S as Note>::R;
+    type ST = <N::ST as Note>::R;
     type T = <N::T as Note>::R;
     fn name(&self) -> String {
         self.0.name()
@@ -251,5 +264,19 @@ mod test {
         <<M6 as IntervalResolve<Sharp<C>>>::R>::default();
         <<m7 as IntervalResolve<Sharp<C>>>::R>::default();
         <<M7 as IntervalResolve<Sharp<C>>>::R>::default();
+
+        // F Minor
+        <<P1 as IntervalResolve<F>>::R>::default();
+        <<m2 as IntervalResolve<F>>::R>::default();
+        <<M2 as IntervalResolve<F>>::R>::default();
+        <<m3 as IntervalResolve<F>>::R>::default();
+        <<M3 as IntervalResolve<F>>::R>::default();
+        <<P4 as IntervalResolve<F>>::R>::default();
+        <<d5 as IntervalResolve<F>>::R>::default();
+        <<P5 as IntervalResolve<F>>::R>::default();
+        <<A5 as IntervalResolve<F>>::R>::default();
+        <<M6 as IntervalResolve<F>>::R>::default();
+        <<m7 as IntervalResolve<F>>::R>::default();
+        <<M7 as IntervalResolve<F>>::R>::default();
     }
 }

@@ -122,7 +122,7 @@ where
     type P4 = ();
     type d5 = ();
     type P5 = ();
-    type A5 = <A5 as IntervalResolve<R>>::R;
+    type A5 = <<P5 as IntervalResolve<R>>::R as Note>::S;
     type M6 = ();
     type m7 = ();
     type M7 = ();
@@ -243,7 +243,7 @@ impl<C: Chord> Chord for Sus2<C> {
     type m7 = C::m7;
     type M7 = C::M7;
     fn name(&self) -> String {
-        format!("{}sus4", self.0.name())
+        format!("{}sus2", self.0.name())
     }
 }
 
@@ -333,29 +333,56 @@ mod test {
     use super::*;
     #[test]
     fn test() {
+        assert_eq!(<Major<C>>::default().name(), "C");
+        assert_eq!(<Major<D>>::default().name(), "D");
+        assert_eq!(<Major<Sharp<C>>>::default().name(), "C♯ ");
+        assert_eq!(<Major<Flat<C>>>::default().name(), "C♭ ");
+        assert_eq!(<Minor<C>>::default().name(), "Cm");
+        assert_eq!(<Minor<Sharp<C>>>::default().name(), "C♯ m");
+        assert_eq!(<Minor<Flat<C>>>::default().name(), "C♭ m");
         <Major<C>>::default().notes_tuple();
         <Major<B>>::default().notes_tuple();
-
+        <Major<C>>::default().notes_tuple();
+        <Major<B>>::default().notes_tuple();
         <Minor<D>>::default().notes_tuple();
         <Minor<E>>::default().notes_tuple();
         <Minor<Flat<D>>>::default().notes_tuple();
 
         <Aug<C>>::default().notes_tuple();
+        assert_eq!(<Aug<C>>::default().name(), "Caug");
 
         <Dim<B>>::default().notes_tuple();
         <Dim<C>>::default().notes_tuple();
         <Dim<G>>::default().notes_tuple();
+        assert_eq!(<Dim<C>>::default().name(), "Cdim");
 
         <Seventh<C>>::default().notes_tuple();
         <MajorSeventh<C>>::default().notes_tuple();
         <MinorSeventh<C>>::default().notes_tuple();
+        assert_eq!(<Seventh<C>>::default().name(), "C7");
+        assert_eq!(<MajorSeventh<C>>::default().name(), "Cmaj7");
+        assert_eq!(<MinorSeventh<C>>::default().name(), "Cm7");
 
         <Sus4<Major<C>>>::default().notes_tuple();
+        <Sus4<Minor<C>>>::default().notes_tuple();
         <Sus4<Seventh<C>>>::default().notes_tuple();
+        <Sus2<Major<C>>>::default().notes_tuple();
+        <Sus2<Minor<C>>>::default().notes_tuple();
         <Sus2<Seventh<C>>>::default().notes_tuple();
+        assert_eq!(<Sus4<Major<C>>>::default().name(), "Csus4");
+        assert_eq!(<Sus4<Minor<C>>>::default().name(), "Cmsus4");
+        assert_eq!(<Sus4<Seventh<C>>>::default().name(), "C7sus4");
+        assert_eq!(<Sus4<MajorSeventh<C>>>::default().name(), "Cmaj7sus4");
+        assert_eq!(<Sus4<MinorSeventh<C>>>::default().name(), "Cm7sus4");
+        assert_eq!(<Sus2<Major<C>>>::default().name(), "Csus2");
 
         <Omit1<Major<C>>>::default().notes_tuple();
         <Omit3<Major<C>>>::default().notes_tuple();
         <Omit5<Major<C>>>::default().notes_tuple();
+        <Omit5<Sus4<MajorSeventh<C>>>>::default().notes_tuple();
+        assert_eq!(
+            <Omit5<Sus4<MajorSeventh<C>>>>::default().name(),
+            "Cmaj7sus4omit5"
+        );
     }
 }

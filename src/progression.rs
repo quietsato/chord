@@ -9,13 +9,23 @@ pub trait Progression {
 }
 
 #[derive(Debug, Default)]
-pub struct OneOfUsProgression<K: Key>(K);
+pub struct PopPunkProgression<K: Key>(K);
 
-impl<K> Progression for OneOfUsProgression<K>
+impl<K> Progression for PopPunkProgression<K>
 where
     K: Key,
 {
     type Progression = (Major<K::I>, Major<K::V>, Minor<K::VI>, Major<K::IV>);
+}
+
+#[derive(Debug, Default)]
+pub struct KomuroProgression<K: Key>(K);
+
+impl<K> Progression for KomuroProgression<K>
+where
+    K: Key,
+{
+    type Progression = (Minor<K::VI>, Major<K::IV>, Major<K::V>, Major<K::I>);
 }
 
 #[derive(Debug, Default)]
@@ -62,19 +72,65 @@ mod test {
     use crate::note::*;
 
     #[test]
-    fn test_one_of_us_progression() {
-        let prog = <OneOfUsProgression<MajorKey<C>>>::default();
-        dbg!(prog.prog());
-        let prog = <OneOfUsProgression<MinorKey<C>>>::default();
-        dbg!(prog.prog());
+    fn test_pop_punk_progression() {
+        let prog = <PopPunkProgression<MajorKey<C>>>::default().prog();
+        dbg!(
+            prog.0.notes_tuple(),
+            prog.1.notes_tuple(),
+            prog.2.notes_tuple(),
+            prog.3.notes_tuple(),
+        );
+        let prog = <PopPunkProgression<MinorKey<C>>>::default().prog();
+        dbg!(
+            prog.0.notes_tuple(),
+            prog.1.notes_tuple(),
+            prog.2.notes_tuple(),
+            prog.3.notes_tuple(),
+        );
+    }
+
+    #[test]
+    fn test_komuro_progression() {
+        let prog = <KomuroProgression<MajorKey<C>>>::default().prog();
+        dbg!(
+            prog.0.notes_tuple(),
+            prog.1.notes_tuple(),
+            prog.2.notes_tuple(),
+            prog.3.notes_tuple(),
+        );
+        let prog = <KomuroProgression<MinorKey<C>>>::default().prog();
+        dbg!(
+            prog.0.notes_tuple(),
+            prog.1.notes_tuple(),
+            prog.2.notes_tuple(),
+            prog.3.notes_tuple(),
+        );
     }
 
     #[test]
     fn test_canon_progression() {
-        let prog = <CanonProgression<MajorKey<C>>>::default();
-        dbg!(prog.prog());
-        let prog = <CanonProgression<MinorKey<C>>>::default();
-        dbg!(prog.prog());
+        let prog = <CanonProgression<MajorKey<C>>>::default().prog();
+        dbg!(
+            prog.0.notes_tuple(),
+            prog.1.notes_tuple(),
+            prog.2.notes_tuple(),
+            prog.3.notes_tuple(),
+            prog.4.notes_tuple(),
+            prog.5.notes_tuple(),
+            prog.6.notes_tuple(),
+            prog.7.notes_tuple(),
+        );
+        let prog = <CanonProgression<MinorKey<C>>>::default().prog();
+        dbg!(
+            prog.0.notes_tuple(),
+            prog.1.notes_tuple(),
+            prog.2.notes_tuple(),
+            prog.3.notes_tuple(),
+            prog.4.notes_tuple(),
+            prog.5.notes_tuple(),
+            prog.6.notes_tuple(),
+            prog.7.notes_tuple(),
+        );
     }
 
     #[test]
