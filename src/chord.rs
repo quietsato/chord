@@ -122,7 +122,7 @@ where
     type P4 = ();
     type d5 = ();
     type P5 = ();
-    type A5 = <<P5 as IntervalResolve<R>>::R as Note>::S;
+    type A5 = <A5 as IntervalResolve<R>>::R;
     type M6 = ();
     type m7 = ();
     type M7 = ();
@@ -205,7 +205,7 @@ where
     }
 }
 impl<R: Note> Chord for MinorSeventh<R> {
-    type R = <P1 as IntervalResolve<R>>::R;
+    type R = R;
     type P1 = <P1 as IntervalResolve<R>>::R;
     type m2 = ();
     type M2 = ();
