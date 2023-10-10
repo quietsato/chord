@@ -26,7 +26,7 @@ impl_interval!(M3, <<M2 as IntervalResolve<N>>::R as Note>::T);
 impl_interval!(P4, <<M3 as IntervalResolve<N>>::R as Note>::ST);
 impl_interval!(d5, <<P4 as IntervalResolve<N>>::R as Note>::ST);
 impl_interval!(P5, <<P4 as IntervalResolve<N>>::R as Note>::T);
-impl_interval!(A5, <<P5 as IntervalResolve<N>>::R as Note>::ST);
+impl_interval!(A5, <<P5 as IntervalResolve<N>>::R as Note>::S);
 impl_interval!(M6, <<P5 as IntervalResolve<N>>::R as Note>::T);
 impl_interval!(m7, <<M6 as IntervalResolve<N>>::R as Note>::ST);
 impl_interval!(M7, <<M6 as IntervalResolve<N>>::R as Note>::T);
