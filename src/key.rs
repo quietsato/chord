@@ -85,22 +85,22 @@ pub struct MinorKey<Tonic: Note>(Tonic);
 macro_rules! impl_key {
     ($t:tt) => {
         impl Key for MajorKey<$t> {
-            type I = <P1 as IntervalResolve<$t>>::R;
-            type II = <M2 as IntervalResolve<$t>>::R;
-            type III = <M3 as IntervalResolve<$t>>::R;
-            type IV = <P4 as IntervalResolve<$t>>::R;
-            type V = <P5 as IntervalResolve<$t>>::R;
-            type VI = <M6 as IntervalResolve<$t>>::R;
-            type VII = <M7 as IntervalResolve<$t>>::R;
+            type I = <$t as Note>::R;
+            type II = <Self::I as Note>::T;
+            type III = <Self::II as Note>::T;
+            type IV = <Self::III as Note>::ST;
+            type V = <Self::IV as Note>::T;
+            type VI = <Self::V as Note>::T;
+            type VII = <Self::VI as Note>::T;
         }
         impl Key for MinorKey<$t> {
-            type I = <P1 as IntervalResolve<$t>>::R;
-            type II = <M2 as IntervalResolve<$t>>::R;
-            type III = <m3 as IntervalResolve<$t>>::R;
-            type IV = <P4 as IntervalResolve<$t>>::R;
-            type V = <P5 as IntervalResolve<$t>>::R;
-            type VI = <A5 as IntervalResolve<$t>>::R;
-            type VII = <m7 as IntervalResolve<$t>>::R;
+            type I = <$t as Note>::R;
+            type II = <Self::I as Note>::T;
+            type III = <Self::II as Note>::ST;
+            type IV = <Self::III as Note>::T;
+            type V = <Self::IV as Note>::T;
+            type VI = <Self::V as Note>::ST;
+            type VII = <Self::VI as Note>::T;
         }
     };
 }
