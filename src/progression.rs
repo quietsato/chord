@@ -62,6 +62,22 @@ where
     );
 }
 
+#[derive(Debug, Default)]
+pub struct JustTheTwoOfUsProgression<K: Key>(K);
+
+impl<K> Progression for JustTheTwoOfUsProgression<K>
+where
+    K: Key,
+{
+    type Progression = (
+        MajorSeventh<K::IV>,
+        Seventh<K::III>,
+        MinorSeventh<K::VI>,
+        MinorSeventh<K::V>,
+        Seventh<K::I>,
+    );
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -144,6 +160,34 @@ mod test {
             prog.1.notes_tuple(),
             prog.2.notes_tuple(),
             prog.3.notes_tuple(),
+        );
+    }
+
+    #[test]
+    fn test_just_the_two_of_us_progression() {
+        let prog = <JustTheTwoOfUsProgression<MajorKey<C>>>::default().prog();
+        dbg!(
+            prog.0.notes_tuple(),
+            prog.1.notes_tuple(),
+            prog.2.notes_tuple(),
+            prog.3.notes_tuple(),
+            prog.4.notes_tuple(),
+        );
+        let prog = <JustTheTwoOfUsProgression<MinorKey<C>>>::default().prog();
+        dbg!(
+            prog.0.notes_tuple(),
+            prog.1.notes_tuple(),
+            prog.2.notes_tuple(),
+            prog.3.notes_tuple(),
+            prog.4.notes_tuple(),
+        );
+        let prog = <JustTheTwoOfUsProgression<MajorKey<Flat<A>>>>::default().prog();
+        dbg!(
+            prog.0.notes_tuple(),
+            prog.1.notes_tuple(),
+            prog.2.notes_tuple(),
+            prog.3.notes_tuple(),
+            prog.4.notes_tuple(),
         );
     }
 }
