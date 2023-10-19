@@ -53,10 +53,6 @@ pub struct RoyalRoadProgression<K: Key>(K);
 impl<K> Progression for RoyalRoadProgression<K>
 where
     K: Key,
-    Major<K::IV>: TriadChord,
-    Major<K::V>: TriadChord,
-    Minor<K::VI>: Chord,
-    Minor<K::III>: TriadChord,
 {
     type Progression = (
         MajorSeventh<K::IV>,
